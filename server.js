@@ -8,9 +8,15 @@ const bodyParser = require('body-parser');
 const jwt = require('_helpers/jwt');
 const errorHandler = require('_helpers/error-handler');
 
+
+const origin = process.env.NODE_ENV === 'production' ? process.env.ANGULAR_URL : 'http://localhost:4200';
+
+app.use(cors({
+    origin: origin
+}));
+
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-app.use(cors());
 
 // use JWT auth to secure the api
 app.use(jwt());
@@ -22,10 +28,6 @@ app.use('/campaign', require('./campaigns/campaign.controller'));
 
 // global error handler
 app.use(errorHandler);
-
-app.use(cors({
-    origin: process.env.ANGULAR_URL
-}));
 
 // start server
 const port = process.env.NODE_ENV === 'production' ? (process.env.PORT || 80) : 4000;
