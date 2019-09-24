@@ -23,6 +23,10 @@ app.use('/campaign', require('./campaigns/campaign.controller'));
 // global error handler
 app.use(errorHandler);
 
+app.use(cors({
+    origin: process.env.ANGULAR_URL
+}));
+
 // start server
 const port = process.env.NODE_ENV === 'production' ? (process.env.PORT || 80) : 4000;
 app.listen(port, function () {
