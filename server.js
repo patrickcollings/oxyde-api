@@ -9,7 +9,7 @@ const jwt = require('_helpers/jwt');
 const errorHandler = require('_helpers/error-handler');
 
 
-const origin = process.env.NODE_ENV === 'production' ? process.env.ANGULAR_URL : 'http://localhost:4200';
+const origin = process.env.NODE_ENV === 'production' ? process.env.ANGULAR_URL : ['http://localhost:4200', 'https://mysterious-sea-25019.herokuapp.com'];
 
 app.use(cors({
     origin: origin
@@ -25,6 +25,7 @@ app.use(jwt());
 app.use('/manager', require('./managers/manager.controller'));
 app.use('/employee', require('./employees/employee.controller'));
 app.use('/campaign', require('./campaigns/campaign.controller'));
+app.use('/email', require('./emails/email.controller'));
 
 // global error handler
 app.use(errorHandler);
