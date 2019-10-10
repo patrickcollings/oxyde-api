@@ -9,7 +9,7 @@ const jwt = require('_helpers/jwt');
 const errorHandler = require('_helpers/error-handler');
 
 
-const origin = process.env.NODE_ENV === 'production' ? process.env.ANGULAR_URL : ['http://localhost:4200', 'http://localhost:4444', 'https://mysterious-sea-25019.herokuapp.com'];
+const origin = process.env.NODE_ENV === 'production' ? [process.env.ANGULAR_URL, 'https://mysterious-sea-25019.herokuapp.com'] : ['http://localhost:4200', 'http://localhost:4444'];
 
 app.use(cors({
     origin: origin
