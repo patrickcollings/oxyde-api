@@ -6,10 +6,18 @@ const schema = new Schema({
     createdDate: { type: Date, default: Date.now },
     endDate: { type: Date },
     length: { type: Number, required: true },
-    employees: [{type: Schema.Types.ObjectId, ref: 'Employee'}],
+    employees: [
+        {
+            id: {type: Schema.Types.ObjectId, ref: 'Employee'},
+            caught: { type: Number, default: 0 }
+        }
+    ],
     phished: { type: Number },
     avoided: { type: Number },
-    manager: { type: Schema.Types.ObjectId, ref: 'Manager', required: true }
+    domain:  { type: String },
+    emailProvider: { type: String },
+    manager: { type: Schema.Types.ObjectId, ref: 'Manager', required: true },
+    companyName: { type: String }
 });
 
 schema.set('toJSON', { virtuals: true });

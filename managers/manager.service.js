@@ -91,7 +91,7 @@ async function getCampaign(id) {
     const manager = await Manager.findById(id).populate({
         path: 'campaign',
         populate: {
-            path: 'employees',
+            path: 'employees.id',
             model: 'Employee'
         } 
     });
