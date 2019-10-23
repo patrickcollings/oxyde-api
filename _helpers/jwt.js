@@ -1,6 +1,7 @@
 const expressJwt = require('express-jwt');
 const config = require('config.json');
 const managerService = require('../managers/manager.service');
+const pathToRegexp = require('path-to-regexp');
 
 module.exports = jwt;
 
@@ -9,9 +10,13 @@ function jwt() {
     return expressJwt({ secret, isRevoked }).unless({
         path: [
             // public routes that don't require authentication
-            '/manager/authenticate',
-            '/manager/register',
-            '/email/caught'
+            pathToRegexp('/manager/authenticate'),
+            pathToRegexp('/manager/register'),
+            pathToRegexp('/email/caught'),
+            pathToRegexp('/email/templates'),
+            pathToRegexp('/email/template/:id'),
+            pathToRegexp('/email/contact'),
+            pathToRegexp('/manager/verify'),
         ]
     });
 }

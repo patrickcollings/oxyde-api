@@ -9,7 +9,14 @@ const schema = new Schema({
     createdDate: { type: Date, default: Date.now },
     employees: [{ type: Schema.Types.ObjectId, ref: 'Employee' }],
     campaign: { type: Schema.Types.ObjectId, ref: 'Campaign' },
-    companyName: { type: String }
+    companyName: { type: String },
+    whitelistingSetup: { type: Boolean, default: false },
+    emailTest: { type: Boolean, default: false },
+    reset: {
+        token: { type: String, unique: true },
+        expires: { type: Date }
+    },
+    verified: { type: Boolean, default: false }
 });
 
 schema.set('toJSON', { virtuals: true });

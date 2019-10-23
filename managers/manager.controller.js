@@ -5,6 +5,7 @@ const managerService = require('./manager.service');
 // routes
 router.post('/authenticate', authenticate);
 router.post('/register', register);
+router.post('/verify', verify);
 router.get('/', getAll);
 router.get('/current', getCurrent);
 // router.get('/:id', getById);
@@ -22,7 +23,6 @@ function authenticate(req, res, next) {
 }
 
 function register(req, res, next) {
-    console.log(req);
     managerService.create(req.body)
         .then(() => res.json({}))
         .catch(err => next(err));
@@ -60,7 +60,7 @@ function getById(req, res, next) {
 }
 
 function update(req, res, next) {
-    managerService.update(req.params.id, req.body)
+    managerService.update(req.user.sub, req.body)
         .then(() => res.json({}))
         .catch(err => next(err));
 }
@@ -68,5 +68,11 @@ function update(req, res, next) {
 function _delete(req, res, next) {
     managerService.delete(req.params.id)
         .then(() => res.json({}))
+        .catch(err => next(err));
+}
+
+function verify(req, res, next) {
+    managerService.verify(req.body)
+        .then(result => result ? res.json(result) : res.sendStatus(404))
         .catch(err => next(err));
 }

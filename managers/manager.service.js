@@ -3,6 +3,8 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const db = require('_helpers/db');
 const Manager = db.Manager;
+const uuidv4 = require('uuid/v4');
+const emailService = require('../emails/email.service');
 
 module.exports = {
     authenticate,
@@ -12,19 +14,24 @@ module.exports = {
     update,
     delete: _delete,
     getEmployees,
-    getCampaign
+    getCampaign,
+    verify
 };
 
 async function authenticate({ username, password }) {
     const manager = await Manager.findOne({ username });
     if (manager && bcrypt.compareSync(password, manager.hash)) {
-        console.log(manager);
-        const { hash, ...managerWithoutHash } = manager.toObject();
-        const token = jwt.sign({ sub: manager.id }, config.secret);
-        return {
-            ...managerWithoutHash,
-            token
-        };
+        if (manager.verified) {
+            console.log(manager);
+            const { hash, ...managerWithoutHash } = manager.toObject();
+            const token = jwt.sign({ sub: manager.id }, config.secret);
+            return {
+                ...managerWithoutHash,
+                token
+            };
+        } else {
+            throw 'Please verify your account.'
+        }
     }
 }
 
@@ -42,7 +49,22 @@ async function create(param) {
         throw 'Username "' + param.username + '" is already taken';
     }
 
+    // Create manager
     const manager = new Manager(param);
+
+    /** Email Verification */
+
+    // Generate random token
+    let resetToken = uuidv4();
+    // Create expiration date
+    var expires = new Date();
+    expires.setHours(expires.getHours() + 6);
+
+    // Set verification options
+    manager.reset.token = resetToken;
+    manager.reset.expires = expires;
+
+    /** /Email Verifiction */
 
     // hash password
     if (param.password) {
@@ -51,6 +73,31 @@ async function create(param) {
 
     // save manager
     await manager.save();
+
+    // Send verification email
+    await emailService.sendVerification(param.username, resetToken);
+}
+
+async function verify(params) {
+    // Find matching token
+    console.log(params);
+    const manager = await Manager.findOne({ 'reset.token': params.token })
+    // Check manager exists
+    if (manager) {
+        // Check manager not verified
+        if (manager.verified) {
+            return { success: false, msg: 'You are already verified.' }
+        }
+        console.log('Manager found');
+        // Check expires
+        let date = new Date();
+        if (date < manager.reset.expires) {
+            // Token is valid verify user
+            manager.verified = true;
+            await manager.save();
+            return { success: true, msg: 'You have successfully been verified.' }
+        }
+    }
 }
 
 async function update(id, param) {
@@ -93,7 +140,7 @@ async function getCampaign(id) {
         populate: {
             path: 'employees.id',
             model: 'Employee'
-        } 
+        }
     });
     return manager.campaign;
 }
