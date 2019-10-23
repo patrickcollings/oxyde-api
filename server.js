@@ -7,9 +7,18 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const jwt = require('_helpers/jwt');
 const errorHandler = require('_helpers/error-handler');
+const campaignService = require('./campaigns/campaign.service');
+const emailService = require('./emails/email.service');
+
+var Recaptcha = require('express-recaptcha').RecaptchaV3;
+//import Recaptcha from 'express-recaptcha'
+var recaptcha = new Recaptcha('6LfEtr4UAAAAAIvQyrgJi0K01l_5RrKk3YHe0RB2', '6LfEtr4UAAAAAI22Xoo373Y0GdK7RFc_PqA1nVvb');
+//or with options
+var options = { 'hl': 'en' };
+var recaptcha = new Recaptcha('6LfEtr4UAAAAAIvQyrgJi0K01l_5RrKk3YHe0RB2', '6LfEtr4UAAAAAI22Xoo373Y0GdK7RFc_PqA1nVvb', options);
 
 
-const origin = process.env.NODE_ENV === 'production' ? [process.env.ANGULAR_URL, 'https://mysterious-sea-25019.herokuapp.com'] : ['http://localhost:4200', 'http://localhost:4444'];
+const origin = process.env.NODE_ENV === 'production' ? [process.env.ANGULAR_URL, 'https://mysterious-sea-25019.herokuapp.com', 'https://oxydetechnologies.com'] : ['http://localhost:4200', 'http://localhost:4444'];
 
 app.use(cors({
     origin: origin
@@ -27,8 +36,22 @@ app.use('/employee', require('./employees/employee.controller'));
 app.use('/campaign', require('./campaigns/campaign.controller'));
 app.use('/email', require('./emails/email.controller'));
 
+app.post('/recaptcha', recaptcha.middleware.verify, function (req, res) {
+    if (!req.recaptcha.error) {
+        // success code
+        console.log("Success");
+        res.send(200);
+    } else {
+        // error code
+        console.log(req.recaptcha.error);
+        res.send(500);
+    }
+});
+
 // global error handler
 app.use(errorHandler);
+
+setInterval(campaignService.checkCampaign, 30000);
 
 // start server
 const port = process.env.NODE_ENV === 'production' ? (process.env.PORT || 80) : 4000;
