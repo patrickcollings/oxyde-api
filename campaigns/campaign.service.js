@@ -4,11 +4,16 @@ const bcrypt = require('bcryptjs');
 const db = require('_helpers/db');
 const emailService = require('../emails/email.service')
 var forEach = require('async-foreach').forEach;
+const moment = require('moment');
+const reportGenerator = require('../_helpers/report-generator');
 
 const User = db.User;
 const Employee = db.Employee;
 const Manager = db.Manager;
 const Campaign = db.Campaign;
+
+const phishingPageURL = process.env.NODE_ENV === 'production' ? 'https://mysterious-sea-25019.herokuapp.com' : 'http://localhost:4444';
+
 
 
 
@@ -55,7 +60,7 @@ async function getById(id) {
 
     // console.log(campaign);
     return campaign;
-    
+
 }
 
 async function update(id, param, managerId) {
@@ -103,20 +108,19 @@ async function _delete(id, managerId) {
 async function checkCampaign() {
     console.log('Checking campaigns');
     // Get current time
-    let now = new Date();
+    let now = moment();
     // Check every campaign to find any that are (active = false && startTime > currentTime)
-    const startCampaigns = await Campaign.find({ active: false, startTime: { $lte: now } });
-    const endCampaigns = await Campaign.find({ active: true, endTime: { $lte: now } });
-    await emailService.tester();
+    const startCampaigns = await Campaign.find({ active: false, complete: false, startTime: { $lte: now.toDate() } });
+    const endCampaigns = await Campaign.find({ active: true, endTime: { $lte: now.toDate() } }).populate('employees.id');
+
+    // Start campaigns
     for (const campaign of startCampaigns) {
-        // Start campaign
         await startCampaign(campaign);
     }
-
-    endCampaigns.forEach(campaign => {
-        // endCampaign(campaign);
-    })
-    // Begin any campaign that is found
+    // End campaigns
+    for (const campaign of endCampaigns) {
+        await endCampaign(campaign);
+    }
 }
 
 async function startCampaign(campaign) {
@@ -128,15 +132,13 @@ async function startCampaign(campaign) {
         templateId: campaign.templateId,
         dynamic_template_data: campaign.dynamic_template_data
     }
-    await emailService.tester();
     // Send email
     await Promise.all(campaign.employees.map(async (employee) => {
         let employeeDetail = await Employee.findById(employee.id);
         emailParam.email = employeeDetail.email; // Employees Email
         emailParam.dynamic_template_data.employeeName = employeeDetail.firstName; // Employees Name
-        emailParam.dynamic_template_data.link = 'https://mysterious-sea-25019.herokuapp.com?user' + employeeDetail.id + '&id=' + campaign._id; // Employees Name
+        emailParam.dynamic_template_data.link = `${phishingPageURL}?user=${employeeDetail.id}&id=${campaign._id}` // Employees Name
         // Send personalized email
-        emailService.tester();
         await emailService.sendTest(emailParam);
     }));
     // Set active true
@@ -146,4 +148,16 @@ async function startCampaign(campaign) {
 
 async function endCampaign(campaign) {
     console.log('Ending campaign ' + campaign.name);
+    console.log(campaign.employees);
+    console.log(campaign.employees.id);
+    // Get campaign manager
+    let manager = await Manager.findById(campaign.manager);
+
+    let report = await reportGenerator.generateReport(campaign);
+
+    await emailService.sendReport(manager.username, report);
+    campaign.active = false;
+    campaign.complete = true;
+    await campaign.save();
+    return;
 }

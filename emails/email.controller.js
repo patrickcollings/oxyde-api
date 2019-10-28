@@ -7,7 +7,8 @@ router.post('/send', send);
 router.post('/sendtest', sendTest);
 router.get('/templates', templates);
 router.get('/template/:id', template);
-router.post('/caught', caught);
+router.post('/caught/credentials', caught);
+router.post('/caught/link', openedLink);
 router.post('/contact', contact);
 
 module.exports = router;
@@ -44,6 +45,12 @@ function template(req, res, next) {
 
 function caught(req, res, next) {
     emailService.caught(req.body)
+        .then(() => res.json({}))
+        .catch(err => next(err));
+}
+
+function openedLink(req, res, next) {
+    emailService.openedLink(req.body)
         .then(() => res.json({}))
         .catch(err => next(err));
 }

@@ -12,7 +12,8 @@ function jwt() {
             // public routes that don't require authentication
             pathToRegexp('/manager/authenticate'),
             pathToRegexp('/manager/register'),
-            pathToRegexp('/email/caught'),
+            pathToRegexp('/email/caught/credentials'),
+            pathToRegexp('/email/caught/link'),
             pathToRegexp('/email/templates'),
             pathToRegexp('/email/template/:id'),
             pathToRegexp('/email/contact'),

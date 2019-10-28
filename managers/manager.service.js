@@ -22,7 +22,7 @@ async function authenticate({ username, password }) {
     const manager = await Manager.findOne({ username });
     if (manager && bcrypt.compareSync(password, manager.hash)) {
         if (manager.verified) {
-            console.log(manager);
+            // console.log(manager);
             const { hash, ...managerWithoutHash } = manager.toObject();
             const token = jwt.sign({ sub: manager.id }, config.secret);
             return {
@@ -97,6 +97,8 @@ async function verify(params) {
             await manager.save();
             return { success: true, msg: 'You have successfully been verified.' }
         }
+    } else {
+        return { msg: 'Mnaager not found' };
     }
 }
 
@@ -128,7 +130,7 @@ async function _delete(id) {
 async function getEmployees(id) {
     console.log(id)
     const manager = await Manager.findById(id).populate('employees');
-    console.log(manager);
+    // console.log(manager);
     return manager.employees;
     // return;
 }

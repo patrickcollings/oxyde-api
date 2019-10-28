@@ -20,7 +20,7 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-const url = process.env.NODE_ENV === 'production' ? 'https://mysterious-sea-25019.herokuapp.com' : 'http://localhost:4200';
+const platformURL = process.env.NODE_ENV === 'production' ? 'https://cryptic-sierra-09498.herokuapp.com' : 'http://localhost:4200';
 
 // async..await is not allowed in global scope, must use a wrapper
 async function sendContactEmail(body) {
@@ -35,12 +35,30 @@ async function sendContactEmail(body) {
 
 async function sendVerification(email, token) {
     // send mail with defined transport object
-    let info = await transporter.sendMail({
+    return await transporter.sendMail({
         from: `"Oxyde" <support@oxydetechnologies.com>`, // sender address
         to: email, // list of receivers
         subject: 'Please verify your account', // Subject line
         text: '',
-        html: `<p>Thanks for registering to use our platform. Please verify your account before logging in by clicking on</p><a href="${url}/verify?token=${token}"> this link.</a>` // plain text body
+        html: `<p>Thanks for registering to use our platform. Please verify your account before logging in by clicking on</p><a href="${platformURL}/verify?token=${token}"> this link.</a>` // plain text body
+    });
+}
+
+async function sendReport(email, report) {
+    // send mail with defined transport object
+    return await transporter.sendMail({
+        from: `"Oxyde Reports" <support@oxydetechnologies.com>`, // sender address
+        to: email, // list of receivers
+        subject: 'Campaign Report', // Subject line
+        text: '',
+        html: `<p>Here is your report:</p> `, // plain text body,
+        attachments: [
+            {
+                'filename': 'report.pdf',
+                'content': report,
+                'contentType': 'application/pdf'
+            }
+        ]
     });
 }
 
@@ -96,24 +114,29 @@ async function getTemplate(templateId) {
         })
 }
 
-async function caught({userId, campaignId}) {
+async function caught({ userId, campaignId }) {
     console.log('User (' + userId + ') caught in campaign (' + campaignId + ')');
-
     const campaign = await Campaign.findById(campaignId);
     // Update campaign object with the user caught
     campaign.employees.forEach(employee => {
-        console.log(employee);
         if (userId === employee.id.toString()) {
-            console.log('Adding caught + 1');
-            employee.caught += 1;
+            employee.caught = true;
         }
     });
     await campaign.save();
     return;
 }
 
-function tester() {
-    console.log('Tester');
+async function openedLink({ userId, campaignId }) {
+    console.log('User opened link');
+    const campaign = await Campaign.findById(campaignId);
+    // Update campaign object with the user caught
+    campaign.employees.forEach(employee => {
+        if (userId === employee.id.toString()) {
+            employee.linkOpened += 1;
+        }
+    });
+    await campaign.save();
     return;
 }
 
@@ -124,7 +147,8 @@ module.exports = {
     sendTest,
     sendContactEmail,
     sendVerification,
+    sendReport,
     caught,
-    tester
+    openedLink
 };
 
