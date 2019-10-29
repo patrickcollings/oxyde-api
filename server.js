@@ -18,10 +18,12 @@ var options = { 'hl': 'en' };
 var recaptcha = new Recaptcha('6LfEtr4UAAAAAIvQyrgJi0K01l_5RrKk3YHe0RB2', '6LfEtr4UAAAAAI22Xoo373Y0GdK7RFc_PqA1nVvb', options);
 
 
-const origin = process.env.NODE_ENV === 'production' ? [process.env.ANGULAR_URL, 'https://mysterious-sea-25019.herokuapp.com', 'https://oxydetechnologies.com'] : ['http://localhost:4200', 'http://localhost:4444'];
+const origins = process.env.NODE_ENV === 
+    'production' ? ['https://dashboard.oxydetechnologies.com', 'https://www.oxydetechnologies.com', 'https://oxyde-phishing.herokuapps.com'] :
+        ['http://localhost:4200', 'http://localhost:4444', 'http://localhost:4222'];
 
 app.use(cors({
-    origin: origin
+    origin: origins
 }));
 
 app.use(bodyParser.urlencoded({ extended: false }));

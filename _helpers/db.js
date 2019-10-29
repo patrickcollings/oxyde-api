@@ -7,4 +7,5 @@ module.exports = {
     Manager: require('../managers/manager.model'),
     Employee: require('../employees/employee.model'),
     Campaign: require('../campaigns/campaign.model'),
+    Email: require('../emails/email.model')
 };

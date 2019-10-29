@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const db = require('_helpers/db');
 const Manager = db.Manager;
 const Campaign = db.Campaign;
+const Email = db.Email;
 const client = require('@sendgrid/client');
 const sgMail = require('@sendgrid/mail');
 const nodemailer = require('nodemailer');
@@ -123,6 +124,14 @@ async function caught({ userId, campaignId }) {
             employee.caught = true;
         }
     });
+
+    // Create and save event
+    let email = new Email({
+        employee: userId,
+        campaign: campaignId,
+        event_type: 'credentials'
+    });
+    await email.save();
     await campaign.save();
     return;
 }
@@ -136,6 +145,14 @@ async function openedLink({ userId, campaignId }) {
             employee.linkOpened += 1;
         }
     });
+
+    // Create and save event
+    let email = new Email({
+        employee: userId,
+        campaign: campaignId,
+        event_type: 'linkOpened'
+    });
+    await email.save();
     await campaign.save();
     return;
 }
