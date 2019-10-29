@@ -12,7 +12,7 @@ const Employee = db.Employee;
 const Manager = db.Manager;
 const Campaign = db.Campaign;
 
-const phishingPageURL = process.env.NODE_ENV === 'production' ? 'https://mysterious-sea-25019.herokuapp.com' : 'http://localhost:4444';
+const phishingPageURL = process.env.NODE_ENV === 'production' ? 'https://oxyde-phishing.herokuapp.com' : 'http://localhost:4444';
 
 
 

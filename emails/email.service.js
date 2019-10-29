@@ -21,7 +21,7 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-const platformURL = process.env.NODE_ENV === 'production' ? 'https://cryptic-sierra-09498.herokuapp.com' : 'http://localhost:4200';
+const platformURL = process.env.NODE_ENV === 'production' ? 'https://dashboard.oxydetechnologies.com' : 'http://localhost:4200';
 
 // async..await is not allowed in global scope, must use a wrapper
 async function sendContactEmail(body) {
