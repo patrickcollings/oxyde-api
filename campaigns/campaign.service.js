@@ -155,7 +155,7 @@ async function endCampaign(campaign) {
 
     let report = await reportGenerator.generateReport(campaign);
 
-    await emailService.sendReport(manager.username, report);
+    await emailService.sendReport(manager.email, report);
     campaign.active = false;
     campaign.complete = true;
     await campaign.save();

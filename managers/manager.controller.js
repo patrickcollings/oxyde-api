@@ -18,13 +18,13 @@ module.exports = router;
 
 function authenticate(req, res, next) {
     managerService.authenticate(req.body)
-        .then(manager => manager ? res.json(manager) : res.status(400).json({ message: 'Username or password is incorrect' }))
+        .then(manager => manager ? res.json(manager) : res.status(400).json({ message: 'Email or password is incorrect' }))
         .catch(err => next(err));
 }
 
 function register(req, res, next) {
     managerService.create(req.body)
-        .then(() => res.json({}))
+        .then(() => res.json({message: 'Successfully registered.'}))
         .catch(err => next(err));
 }
 

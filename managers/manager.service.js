@@ -6,6 +6,19 @@ const Manager = db.Manager;
 const uuidv4 = require('uuid/v4');
 const emailService = require('../emails/email.service');
 
+process.env.NODE_ENV === 'production'
+
+const freeEmailBlacklist = (process.env.NODE_ENV === 'production') ? [
+    // 'gmail',
+    // 'live',
+    // 'hotmail',
+    // 'icloud',
+    // 'mail.com',
+    // 'yahoo',
+    // 'outlook',
+    // 'spray'
+] : [];
+
 module.exports = {
     authenticate,
     getAll,
@@ -18,10 +31,10 @@ module.exports = {
     verify
 };
 
-async function authenticate({ username, password }) {
-    const manager = await Manager.findOne({ username });
+async function authenticate({ email, password }) {
+    const manager = await Manager.findOne({ email });
     if (manager && bcrypt.compareSync(password, manager.hash)) {
-        if (manager.verified) {
+        // if (manager.verified) {
             // console.log(manager);
             const { hash, ...managerWithoutHash } = manager.toObject();
             const token = jwt.sign({ sub: manager.id }, config.secret);
@@ -29,9 +42,9 @@ async function authenticate({ username, password }) {
                 ...managerWithoutHash,
                 token
             };
-        } else {
-            throw 'Please verify your account.'
-        }
+        // } else {
+            // throw 'Please verify your account.'
+        // }
     }
 }
 
@@ -45,14 +58,22 @@ async function getById(id) {
 
 async function create(param) {
     // validate
-    if (await Manager.findOne({ username: param.username })) {
-        throw 'Username "' + param.username + '" is already taken';
+    if (await Manager.findOne({ email: param.email })) {
+        throw new Error('Email "' + param.email + '" is already taken');
     }
 
     // Create manager
     const manager = new Manager(param);
 
     /** Email Verification */
+    let provider = param.email.substring(param.email.indexOf('@') + 1);
+    // Check not belonging to free email provider
+    freeEmailBlacklist.forEach(blacklistProvider => {
+        // Check if email belongs to free email provider
+        if (provider.toLowerCase().indexOf(blacklistProvider) === 1) {
+            throw new Error('Cannot use free email provider, please use your companies domain. ie me@mycompany.com');
+        }
+    });
 
     // Generate random token
     let resetToken = uuidv4();
@@ -74,8 +95,13 @@ async function create(param) {
     // save manager
     await manager.save();
 
-    // Send verification email
-    await emailService.sendVerification(param.username, resetToken);
+    try {
+        await emailService.sendVerification(param.email, resetToken);
+    } catch (err) {
+        // If error remove manager
+        Manager.findByIdAndRemove(manager._id);
+        throw new Error('Error, please ensure email address is valid.');
+    }
 }
 
 async function verify(params) {
@@ -107,8 +133,8 @@ async function update(id, param) {
 
     // validate
     if (!manager) throw 'Manager not found';
-    if (manager.username !== param.username && await Manager.findOne({ username: param.username })) {
-        throw 'Username "' + param.username + '" is already taken';
+    if (manager.email !== param.email && await Manager.findOne({ email: param.email })) {
+        throw 'Email "' + param.email + '" is already taken';
     }
 
     // hash password if it was entered
