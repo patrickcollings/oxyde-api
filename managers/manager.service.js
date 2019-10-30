@@ -142,9 +142,13 @@ async function update(id, param) {
         param.hash = bcrypt.hashSync(param.password, 10);
     }
 
-
     // copy param properties to manager
     Object.assign(manager, param);
+
+    // Check if user setup has been completed
+    if (manager.whitelisted && manager.emailTested && manager.verified && manager.emailTested) {
+        manager.accountDetailsCompleted = true;
+    }
 
     await manager.save();
 }
