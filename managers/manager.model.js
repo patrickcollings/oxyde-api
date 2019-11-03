@@ -9,6 +9,7 @@ const schema = new Schema({
     createdDate: { type: Date, default: Date.now },
     employees: [{ type: Schema.Types.ObjectId, ref: 'Employee' }],
     campaign: { type: Schema.Types.ObjectId, ref: 'Campaign' },
+    completedCampaigns: [{ type: Schema.Types.ObjectId, ref: 'Campaign' }],
     companyName: { type: String },
     reset: {
         token: { type: String, unique: true },

@@ -12,6 +12,7 @@ router.get('/current', getCurrent);
 router.put('/current', update);
 router.get('/employees', getEmployees);
 router.get('/campaign', getCampaign);
+router.get('/campaign/past', getPastCampaigns);
 router.delete('/current', _delete);
 
 module.exports = router;
@@ -44,6 +45,12 @@ function getEmployees(req, res, next) {
 function getCampaign(req, res, next) {
     managerService.getCampaign(req.user.sub)
         .then(campaign => campaign ? res.json(campaign) : res.sendStatus(404))
+        .catch(err => next(err));
+}
+
+function getPastCampaigns(req, res, next) {
+    managerService.getPastCampaigns(req.user.sub)
+        .then(campaigns => campaigns ? res.json(campaigns) : res.sendStatus(404))
         .catch(err => next(err));
 }
 

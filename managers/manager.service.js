@@ -28,6 +28,7 @@ module.exports = {
     delete: _delete,
     getEmployees,
     getCampaign,
+    getPastCampaigns,
     verify
 };
 
@@ -175,4 +176,15 @@ async function getCampaign(id) {
         }
     });
     return manager.campaign;
+}
+
+async function getPastCampaigns(id) {
+    const manager = await Manager.findById(id).populate({
+        path: 'completedCampaigns',
+        populate: {
+            path: 'employees.id',
+            model: 'Employee'
+        }
+    });
+    return manager.completedCampaigns;
 }

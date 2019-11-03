@@ -32,8 +32,12 @@ async function create(param) {
 
     console.log(param);
 
-    if (manager.campaign !== undefined) {
-        throw 'You have already created a campaign.';
+    if (manager.campaign !== undefined && manager.campaign !== null) {
+        throw 'You are already running a campaign.';
+    }
+
+    if (param.employees.length === 0) {
+        throw 'You have not selected any employees.';
     }
 
     const campaign = new Campaign(param);
@@ -52,15 +56,10 @@ async function create(param) {
 }
 
 async function getById(id) {
-    const campaign = await Campaign.findById(id);
-
-    await Promise.all(campaign.employees.map(async (employee) => {
-        await employee.populate('id');
-    }));
+    const campaign = await Campaign.findById(id).populate({path: 'employees.id'});
 
     // console.log(campaign);
     return campaign;
-
 }
 
 async function update(id, param, managerId) {
@@ -156,8 +155,13 @@ async function endCampaign(campaign) {
     let report = await reportGenerator.generateReport(campaign);
 
     await emailService.sendReport(manager.email, report);
+
+    // Deactivate campaign
     campaign.active = false;
     campaign.complete = true;
+    manager.campaign = undefined;
+    manager.completedCampaigns.push(campaign._id);
     await campaign.save();
+    await manager.save();
     return;
 }

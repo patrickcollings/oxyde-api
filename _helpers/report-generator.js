@@ -32,7 +32,7 @@ async function generateReport(campaign) {
 }
 
 async function generateStatistics(campaign) {
-        // Generate campaign statistics
+    // Generate campaign statistics
     // Get total links opened
     let totalLinks = 0;
     let totalEmployeesOpenedLinks = 0;
@@ -47,10 +47,13 @@ async function generateStatistics(campaign) {
         }
     });
     // Get percentages
+    let percentageLinks = 0;
+    let percentageCaught = 0;
     let noEmployees = campaign.employees.length;
-    let percentageLinks = totalEmployeesOpenedLinks/noEmployees*100;
-    let percentageCaught = totalEmployeesCaught/noEmployees*100;  
-
+    if (noEmployees > 0) {
+        percentageLinks = totalEmployeesOpenedLinks / noEmployees * 100;
+        percentageCaught = totalEmployeesCaught / noEmployees * 100;
+    } 
     // Update campaign object
     campaign.report.totalOpenedLinks = totalLinks;
     campaign.report.totalEmployeesOpenedLinks = totalEmployeesOpenedLinks;
