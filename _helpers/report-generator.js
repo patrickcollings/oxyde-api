@@ -2,6 +2,10 @@ const PDFDocument = require('pdfkit');
 const db = require('./db');
 const Campaign = db.Campaign;
 
+const AWS = require('aws-sdk');
+const fs = require('fs');
+const path = require('path');
+
 module.exports = {
     generateReport
 }
@@ -28,6 +32,9 @@ async function generateReport(campaign) {
     // Finalize PDF file
     doc.end();
 
+    // Save pdf to amazon s3 and add meta data to DB
+    savePDF(doc, campaign.name);
+
     return doc;
 }
 
@@ -53,7 +60,7 @@ async function generateStatistics(campaign) {
     if (noEmployees > 0) {
         percentageLinks = totalEmployeesOpenedLinks / noEmployees * 100;
         percentageCaught = totalEmployeesCaught / noEmployees * 100;
-    } 
+    }
     // Update campaign object
     campaign.report.totalOpenedLinks = totalLinks;
     campaign.report.totalEmployeesOpenedLinks = totalEmployeesOpenedLinks;
@@ -71,4 +78,36 @@ async function generateStatistics(campaign) {
         percentageCaught,
         noEmployees
     };
+}
+
+async function savePDF(pdf, name) {
+    const awsSecretKey = '9oDWCbZ9v9YgtHxbR8fmatRcaLqaIhNg41yBNIcX';
+    const awsAccessID = 'AKIAI2LZ7SFSRTAJSCGQ';
+
+    //configuring the AWS environment
+    AWS.config.update({
+        accessKeyId: awsAccessID,
+        secretAccessKey: awsSecretKey
+    });
+
+    var s3 = new AWS.S3();
+
+    //configuring parameters
+    var params = {
+        Bucket: 'oxyde',
+        Body: pdf,
+        Key: "reports/" + Date.now() + "_" + name + ".pdf"
+    };
+
+    await s3.upload(params, (err, data) => {
+        //handle error
+        if (err) {
+            console.log("Error", err);
+        }
+
+        //success
+        if (data) {
+            console.log("Uploaded in:", data.Location);
+        }
+    });
 }
