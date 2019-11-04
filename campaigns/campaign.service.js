@@ -12,14 +12,28 @@ const Employee = db.Employee;
 const Manager = db.Manager;
 const Campaign = db.Campaign;
 
+const AWS = require('aws-sdk');
+const fs = require('fs');
+const path = require('path');
+
 const phishingPageURL = process.env.NODE_ENV === 'production' ? 'https://oxyde-phishing.herokuapp.com' : 'http://localhost:4444';
 
+const awsSecretKey = '9oDWCbZ9v9YgtHxbR8fmatRcaLqaIhNg41yBNIcX';
+const awsAccessID = 'AKIAI2LZ7SFSRTAJSCGQ';
 
+//configuring the AWS environment
+AWS.config.update({
+    accessKeyId: awsAccessID,
+    secretAccessKey: awsSecretKey
+});
+
+var s3 = new AWS.S3();
 
 
 module.exports = {
     create,
     getById,
+    getCampaignReport,
     update,
     delete: _delete,
     checkCampaign
@@ -56,10 +70,28 @@ async function create(param) {
 }
 
 async function getById(id) {
-    const campaign = await Campaign.findById(id).populate({path: 'employees.id'});
+    const campaign = await Campaign.findById(id).populate({ path: 'employees.id' });
 
     // console.log(campaign);
     return campaign;
+}
+
+async function getCampaignReport(res, campaignId, managerId) {
+
+    const campaign = await Campaign.findById(campaignId);
+
+    if (!campaign.manager.equals(managerId)) {
+        throw 'You do not have access to this report.';
+    }
+
+    var params = {
+        Bucket: 'oxyde',
+        Key: campaign.report.file_URL
+    };
+
+    console.log(params);
+
+    return params;
 }
 
 async function update(id, param, managerId) {

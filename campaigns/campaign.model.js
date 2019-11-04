@@ -29,7 +29,8 @@ const schema = new Schema({
         totalEmployeesOpenedLinks: { type: Number, default: 0 },
         totalEmployeesCaught: { type: Number, default: 0 },
         percentageLinksOpened: { type: Number, default: 0},
-        percentageCaught: { type: Number, default: 0 }
+        percentageCaught: { type: Number, default: 0 },
+        file_URL: { type: String } 
     }
 });
 
