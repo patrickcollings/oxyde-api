@@ -18,6 +18,8 @@ function jwt() {
             pathToRegexp('/email/template/:id'),
             pathToRegexp('/email/contact'),
             pathToRegexp('/manager/verify'),
+            pathToRegexp('/manager/reset_password'),
+            pathToRegexp('/manager/new_password'),
         ]
     });
 }

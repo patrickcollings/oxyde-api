@@ -5,7 +5,8 @@ const managerService = require('./manager.service');
 // routes
 router.post('/authenticate', authenticate);
 router.post('/register', register);
-router.post('/verify', verify);
+router.put('/verify', verify);
+router.put('/reverify', reverify);
 router.get('/', getAll);
 router.get('/current', getCurrent);
 // router.get('/:id', getById);
@@ -14,6 +15,9 @@ router.get('/employees', getEmployees);
 router.get('/campaign', getCampaign);
 router.get('/campaign/past', getPastCampaigns);
 router.delete('/current', _delete);
+router.put('/updatepassword', updatePassword);
+router.post('/reset_password', resetPassword);
+router.post('/new_password', newPassword);
 
 module.exports = router;
 
@@ -80,6 +84,30 @@ function _delete(req, res, next) {
 
 function verify(req, res, next) {
     managerService.verify(req.body)
+        .then(result => result ? res.json(result) : res.sendStatus(404))
+        .catch(err => next(err));
+}
+
+function reverify(req, res, next) {
+    managerService.reverify(req.user.sub)
+        .then(result => result ? res.json(result) : res.sendStatus(404))
+        .catch(err => next(err));
+}
+
+function updatePassword(req, res, next) {
+    managerService.updatePassword(req.body.oldPassword, req.body.newPassword, req.user.sub)
+        .then(result => result ? res.json(result) : res.sendStatus(404))
+        .catch(err => next(err));
+}
+
+function resetPassword(req, res, next) {
+    managerService.resetPassword(req.body.email)
+        .then(result => result ? res.json(result) : res.sendStatus(404))
+        .catch(err => next(err));
+}
+
+function newPassword(req, res, next) {
+    managerService.newPassword(req.body.password, req.body.token)
         .then(result => result ? res.json(result) : res.sendStatus(404))
         .catch(err => next(err));
 }

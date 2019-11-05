@@ -29,22 +29,27 @@ module.exports = {
     getEmployees,
     getCampaign,
     getPastCampaigns,
-    verify
+    setupVerification,
+    verify,
+    reverify,
+    updatePassword,
+    resetPassword,
+    newPassword
 };
 
 async function authenticate({ email, password }) {
     const manager = await Manager.findOne({ email });
     if (manager && bcrypt.compareSync(password, manager.hash)) {
         // if (manager.verified) {
-            // console.log(manager);
-            const { hash, ...managerWithoutHash } = manager.toObject();
-            const token = jwt.sign({ sub: manager.id }, config.secret);
-            return {
-                ...managerWithoutHash,
-                token
-            };
+        // console.log(manager);
+        const { hash, ...managerWithoutHash } = manager.toObject();
+        const token = jwt.sign({ sub: manager.id }, config.secret);
+        return {
+            ...managerWithoutHash,
+            token
+        };
         // } else {
-            // throw 'Please verify your account.'
+        // throw 'Please verify your account.'
         // }
     }
 }
@@ -76,16 +81,6 @@ async function create(param) {
         }
     });
 
-    // Generate random token
-    let resetToken = uuidv4();
-    // Create expiration date
-    var expires = new Date();
-    expires.setHours(expires.getHours() + 6);
-
-    // Set verification options
-    manager.reset.token = resetToken;
-    manager.reset.expires = expires;
-
     /** /Email Verifiction */
 
     // hash password
@@ -96,13 +91,31 @@ async function create(param) {
     // save manager
     await manager.save();
 
+    await setupVerification(manager);
+
+
+}
+
+async function setupVerification(manager) {
+    // Generate random token
+    let resetToken = uuidv4();
+    // Create expiration date
+    var expires = new Date();
+    expires.setHours(expires.getHours() + 6);
+
+    // Set verification options
+    manager.reset.token = resetToken;
+    manager.reset.expires = expires;
+
     try {
-        await emailService.sendVerification(param.email, resetToken);
+        await emailService.sendVerification(manager.email, resetToken);
     } catch (err) {
         // If error remove manager
-        Manager.findByIdAndRemove(manager._id);
+        // Manager.findByIdAndRemove(manager._id);
         throw new Error('Error, please ensure email address is valid.');
     }
+
+    await manager.save();
 }
 
 async function verify(params) {
@@ -123,10 +136,18 @@ async function verify(params) {
             manager.verified = true;
             await manager.save();
             return { success: true, msg: 'You have successfully been verified.' }
+        } else {
+            return { success: false, msg: 'Your verification email has expired. Please send another.' }
         }
     } else {
-        return { msg: 'Mnaager not found' };
+        return { success: false, msg: 'No account found. You can request another email from your profile.' };
     }
+}
+
+async function reverify(managerId) {
+    const manager = await Manager.findById(managerId);
+    await setupVerification(manager);
+    return { success: true, msg: 'Verification email sent.' }
 }
 
 async function update(id, param) {
@@ -140,7 +161,8 @@ async function update(id, param) {
 
     // hash password if it was entered
     if (param.password) {
-        param.hash = bcrypt.hashSync(param.password, 10);
+        // Check old password
+        throw 'Cannot update password';
     }
 
     // copy param properties to manager
@@ -152,6 +174,63 @@ async function update(id, param) {
     }
 
     await manager.save();
+
+    return { success: true, msg: 'Account Updated.' }
+}
+
+async function updatePassword(oldPassword, newPassword, managerId) {
+    // Find manager
+    const manager = await Manager.findById(managerId);
+
+    if (!manager) {
+        throw 'Manager not found';
+    }
+
+    // Check password
+    if (manager && bcrypt.compareSync(oldPassword, manager.hash)) {
+        // Update with new password
+        manager.hash = bcrypt.hashSync(newPassword, 10);
+        await manager.save();
+        return {success: true, msg: 'Password updated.'}
+    } else {
+        return {success: false, msg: 'Old password incorrect.'}
+    }
+}
+
+async function resetPassword(email) {
+    const manager = await Manager.findOne({ 'email': email });
+    if (!manager) {
+        throw 'No account found.'
+    }
+    const secret = manager.hash + '_' + manager.createdDate;
+    console.log('secret ' + secret);
+    const token = jwt.sign({ id: manager._id }, secret, {expiresIn: '1h'});
+    console.log(token);
+    await emailService.sendPasswordReset(email, token, manager._id);
+
+    return {success: true, msg: 'Email sent'}
+}
+
+async function newPassword(password, token) {
+
+    // Decode token
+    const decodedToken = jwt.decode(token);
+    console.log(decodedToken);
+    const manager = await Manager.findById(decodedToken.id);
+    if (!manager) {
+        throw 'No account found.'
+    }
+    // Recreate secret
+    const secret = manager.hash + '_' + manager.createdDate;
+    console.log('decoded secret ' + secret);
+    try {
+        jwt.verify(token, secret);   
+    } catch {
+        throw 'Token expired, please send another request.';
+    }
+    manager.hash = bcrypt.hashSync(password, 10);
+    await manager.save();
+    return {success:true, msg:'New password saved.'}
 }
 
 async function _delete(id) {

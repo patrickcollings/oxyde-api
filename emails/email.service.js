@@ -42,7 +42,18 @@ async function sendVerification(email, token) {
         to: email, // list of receivers
         subject: 'Please verify your account', // Subject line
         text: '',
-        html: `<p>Thanks for registering to use our platform. Please verify your account before logging in by clicking on</p><a href="${platformURL}/verify?token=${token}"> this link.</a>` // plain text body
+        html: `<p>Thanks for registering to use our platform. Please verify your account before logging in by clicking on</p><a href="${platformURL}/verify?token=${token}&user=${email}"> this link.</a>` // plain text body
+    });
+}
+
+async function sendPasswordReset(email, token, userId) {
+    // send mail with defined transport object
+    return await transporter.sendMail({
+        from: `"Oxyde" <support@oxydetechnologies.com>`, // sender address
+        to: email, // list of receivers
+        subject: 'Reset your password', // Subject line
+        text: '',
+        html: `<p>Reset your password by clicking on</p><a href="${platformURL}/reset?token=${token}?id=${userId}"> this link.</a>` // plain text body
     });
 }
 
@@ -178,6 +189,7 @@ module.exports = {
     sendTest,
     sendContactEmail,
     sendVerification,
+    sendPasswordReset,
     sendReport,
     caught,
     openedLink
