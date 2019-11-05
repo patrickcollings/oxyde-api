@@ -6,8 +6,11 @@ const AWS = require('aws-sdk');
 const fs = require('fs');
 const path = require('path');
 
+const bucket = process.env.NODE_ENV === 'production' ? 'oxyde' : 'development';
+
 module.exports = {
-    generateReport
+    generateReport,
+    generateStatistics
 }
 
 async function generateReport(campaign) {
@@ -32,8 +35,14 @@ async function generateReport(campaign) {
     // Finalize PDF file
     doc.end();
 
+    const name = "report/" + Date.now() + "_" + campaign.name + ".pdf";
+    
+    // Save PDF location to campaign
+    campaign.report.file_URL = name;
+    await campaign.save();
+
     // Save pdf to amazon s3 and add meta data to DB
-    savePDF(doc, campaign.name);
+    savePDF(doc, name);
 
     return doc;
 }
@@ -67,6 +76,11 @@ async function generateStatistics(campaign) {
     campaign.report.totalEmployeesCaught = totalEmployeesCaught;
     campaign.report.percentageLinksOpened = percentageLinks;
     campaign.report.percentageCaught = percentageCaught;
+    campaign.report.percentageCaught = percentageCaught;
+
+    campaign.report.percentageNoEngagement = 100 - percentageLinks;
+
+    campaign.report.updated = new Date();
 
     await campaign.save();
 
@@ -96,7 +110,7 @@ async function savePDF(pdf, name) {
     var params = {
         Bucket: 'oxyde',
         Body: pdf,
-        Key: "reports/" + Date.now() + "_" + name + ".pdf"
+        Key: name
     };
 
     await s3.upload(params, (err, data) => {

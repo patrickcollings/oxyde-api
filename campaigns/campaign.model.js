@@ -30,8 +30,11 @@ const schema = new Schema({
         totalEmployeesCaught: { type: Number, default: 0 },
         percentageLinksOpened: { type: Number, default: 0},
         percentageCaught: { type: Number, default: 0 },
-        file_URL: { type: String } 
-    }
+        percentageNoEngagement: { type: Number, default: 100 },
+        file_URL: { type: String },
+        updated: { type: Date }
+    },
+    emails: [{type: Schema.Types.ObjectId, ref: 'Email'}]
 });
 
 schema.set('toJSON', { virtuals: true });

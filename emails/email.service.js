@@ -9,6 +9,7 @@ const client = require('@sendgrid/client');
 const sgMail = require('@sendgrid/mail');
 const nodemailer = require('nodemailer');
 const apiKey = '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';
+const reportGenerator = require('../_helpers/report-generator');
 
 // create reusable transporter object using the default SMTP transport
 const transporter = nodemailer.createTransport({
@@ -125,12 +126,19 @@ async function caught({ userId, campaignId }) {
         }
     });
 
+    // Update statistics
+    await reportGenerator.generateStatistics(campaign);
+
     // Create and save event
     let email = new Email({
         employee: userId,
         campaign: campaignId,
         event_type: 'credentials'
     });
+
+    // Save email to campaign object
+    campaign.emails.push(email._id);
+
     await email.save();
     await campaign.save();
     return;
@@ -146,12 +154,18 @@ async function openedLink({ userId, campaignId }) {
         }
     });
 
+    await reportGenerator.generateStatistics(campaign);
+
     // Create and save event
     let email = new Email({
         employee: userId,
         campaign: campaignId,
         event_type: 'linkOpened'
     });
+
+    // Save email to campaign object
+    campaign.emails.push(email._id);
+
     await email.save();
     await campaign.save();
     return;
