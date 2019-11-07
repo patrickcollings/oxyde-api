@@ -57,7 +57,10 @@ async function sendPasswordReset(email, token, userId) {
     });
 }
 
-async function sendReport(email, report) {
+async function sendReport(email, pdfData) {
+
+    console.log(pdfData);
+    
     // send mail with defined transport object
     return await transporter.sendMail({
         from: `"Oxyde Reports" <support@oxydetechnologies.com>`, // sender address
@@ -67,9 +70,9 @@ async function sendReport(email, report) {
         html: `<p>Here is your report:</p> `, // plain text body,
         attachments: [
             {
-                'filename': 'report.pdf',
-                'content': report,
-                'contentType': 'application/pdf'
+                filename: 'report.pdf',
+                content: pdfData,
+                contentType: 'application/pdf'
             }
         ]
     });

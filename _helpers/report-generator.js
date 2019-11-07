@@ -6,6 +6,8 @@ const AWS = require('aws-sdk');
 const fs = require('fs');
 const path = require('path');
 
+const emailService = require('../emails/email.service');
+
 const bucket = process.env.NODE_ENV === 'production' ? 'oxyde' : 'development';
 
 module.exports = {
@@ -13,9 +15,11 @@ module.exports = {
     generateStatistics
 }
 
-async function generateReport(campaign) {
+async function generateReport(campaign, email) {
     // Create a document
-    const doc = new PDFDocument;
+    const doc = new PDFDocument();
+    // const writeStream = fs.createWriteStream('report.pdf');
+    // doc.pipe(writeStream);
 
     const reportStatistics = await generateStatistics(campaign);
 
@@ -33,18 +37,35 @@ async function generateReport(campaign) {
     });
 
     // Finalize PDF file
+
+    let buffers = [];
+    doc.on('data', buffers.push.bind(buffers));
+
+
+    let end = new Promise((resolve, reject) => {
+        doc.on('end', () => {
+            console.log('Concat buffers');
+            let pdfData = Buffer.concat(buffers);
+            resolve(pdfData);
+        });
+    });
+
     doc.end();
 
+    let finalDoc = await end;
+
+    console.log('Finished creating pdf');
+    // call the callback function or in my case resolve the Promise.
     const name = "report/" + Date.now() + "_" + campaign.name + ".pdf";
-    
+
     // Save PDF location to campaign
     campaign.report.file_URL = name;
     await campaign.save();
 
     // Save pdf to amazon s3 and add meta data to DB
-    savePDF(doc, name);
+    await savePDF(finalDoc, name);
 
-    return doc;
+    return finalDoc;
 }
 
 async function generateStatistics(campaign) {

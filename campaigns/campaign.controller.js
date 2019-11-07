@@ -20,6 +20,7 @@ var s3 = new AWS.S3();
 router.post('/', create);
 router.get('/:id', getById);
 router.put('/:id', update);
+router.put('/end/:id', endCampaign);
 router.get('/report/:id', getReport);
 router.delete('/:id', _delete);
 
@@ -75,6 +76,12 @@ function getReport(req, res, next) {
 function update(req, res, next) {
     campaignService.update(req.params.id, req.body, req.user.sub)
         .then(() => res.json({}))
+        .catch(err => next(err));
+}
+
+function endCampaign(req, res, next) {
+    campaignService.endCampaignById(req.params.id)
+        .then(result => (result) ? res.json(result) : res.sendStatus(404))
         .catch(err => next(err));
 }
 

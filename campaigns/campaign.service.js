@@ -36,7 +36,8 @@ module.exports = {
     getCampaignReport,
     update,
     delete: _delete,
-    checkCampaign
+    checkCampaign,
+    endCampaignById
 };
 
 async function create(param) {
@@ -184,10 +185,9 @@ async function endCampaign(campaign) {
     // Get campaign manager
     let manager = await Manager.findById(campaign.manager);
 
-    let report = await reportGenerator.generateReport(campaign);
+    let report = await reportGenerator.generateReport(campaign, manager.email);
 
     await emailService.sendReport(manager.email, report);
-
     // Deactivate campaign
     campaign.active = false;
     campaign.complete = true;
@@ -196,4 +196,10 @@ async function endCampaign(campaign) {
     await campaign.save();
     await manager.save();
     return;
+}
+
+async function endCampaignById(id) {
+    const campaign = await Campaign.findById(id).populate('employees.id');
+    await endCampaign(campaign);
+    return {success: true, msg: 'campaign ended'}
 }
