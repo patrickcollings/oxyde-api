@@ -18,8 +18,8 @@ const path = require('path');
 
 const phishingPageURL = process.env.NODE_ENV === 'production' ? 'https://oxyde-phishing.herokuapp.com' : 'http://localhost:4444';
 
-const awsSecretKey = '9oDWCbZ9v9YgtHxbR8fmatRcaLqaIhNg41yBNIcX';
-const awsAccessID = 'AKIAI2LZ7SFSRTAJSCGQ';
+const awsSecretKey = '{secretKey}';
+const awsAccessID = '{accessId}';
 
 //configuring the AWS environment
 AWS.config.update({
