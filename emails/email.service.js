@@ -8,7 +8,7 @@ const Email = db.Email;
 const client = require('@sendgrid/client');
 const sgMail = require('@sendgrid/mail');
 const nodemailer = require('nodemailer');
-const apiKey = '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';
+const apiKey = '{{apiKey}}';
 const reportGenerator = require('../_helpers/report-generator');
 
 // create reusable transporter object using the default SMTP transport
